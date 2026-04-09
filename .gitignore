@@ -1,0 +1,5 @@
+mpi_sat_change
+huge_*.tif
+huge_*.msk
+*.csv
+.DS_Store
