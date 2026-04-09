@@ -14,7 +14,7 @@
 
 ---
 
-## 📖 Overview
+## Overview
 
 Processing satellite imagery at scale presents a unique challenge: **I/O Bottlenecks.** When images reach gigabyte scales, traditional sequential processing starves the CPU while it waits for the storage drive to feed it pixels.
 
@@ -27,7 +27,7 @@ This project implements a high-performance distributed system to calculate the *
 
 ---
 
-## 🛠️ Strategies
+## Strategies
 
 We implemented three distinct decomposition schemes to analyze performance trade-offs:
 
@@ -39,7 +39,7 @@ We implemented three distinct decomposition schemes to analyze performance trade
 
 ---
 
-## 📊 Benchmarks
+## Benchmarks
 
 Our experiments revealed a "Performance Flip" based on dataset scale.
 
@@ -56,7 +56,7 @@ For big data, the **Dynamic Pipeline** takes the crown. By overlapping I/O and c
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### Prerequisites
 * Linux or WSL2
