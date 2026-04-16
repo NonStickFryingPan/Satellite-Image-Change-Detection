@@ -1,0 +1,1459 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Satellite Imaging Problem — Mid-Semester Project</title>
+        <!-- Typography -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=Space+Grotesk:wght@300..700&display=swap"
+            rel="stylesheet"
+        />
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            :root {
+                --background: #faf6f1;
+                --foreground: #3d2c2c;
+                --primary: #c17f59;
+                --secondary: #f5ede3;
+                --muted: #d4c4b0;
+                --accent: #b89e82;
+                --card-shadow: 0 20px 40px -10px rgba(92, 63, 48, 0.12);
+                --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+                --font-heading: "Space Grotesk", sans-serif;
+                --font-body: "DM Sans", sans-serif;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                background-color: var(--background);
+                color: var(--foreground);
+                font-family: var(--font-body);
+                overflow: hidden;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            .app-container {
+                width: 100vw;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                position: relative;
+            }
+
+            /* Progress Bar */
+            .progress-bar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 6px;
+                background: var(--primary);
+                width: 0%;
+                z-index: 1000;
+                transition: width 0.6s var(--ease-out);
+            }
+
+            /* Slide Management */
+            .slides-container {
+                flex: 1;
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .slide {
+                position: absolute;
+                width: 90%;
+                max-width: 1050px;
+                opacity: 0;
+                pointer-events: none;
+                transform: translateY(30px) scale(0.98);
+                transition:
+                    opacity 0.6s var(--ease-out),
+                    transform 0.6s var(--ease-out);
+                padding: 40px;
+            }
+
+            .slide.active {
+                opacity: 1;
+                pointer-events: all;
+                transform: translateY(0) scale(1);
+            }
+
+            /* Typography */
+            h1 {
+                font-family: var(--font-heading);
+                font-size: 4.5rem;
+                line-height: 0.9;
+                margin-bottom: 24px;
+                font-weight: 700;
+                letter-spacing: -0.04em;
+            }
+
+            h2 {
+                font-family: var(--font-heading);
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                font-weight: 600;
+                letter-spacing: -0.02em;
+            }
+
+            p {
+                font-size: 1.25rem;
+                line-height: 1.6;
+                max-width: 600px;
+                color: var(--foreground);
+                opacity: 0.9;
+            }
+
+            .label {
+                font-family: var(--font-heading);
+                text-transform: uppercase;
+                font-weight: 700;
+                font-size: 0.875rem;
+                letter-spacing: 0.1em;
+                color: var(--primary);
+                margin-bottom: 12px;
+                display: block;
+            }
+
+            /* Components */
+            .card {
+                background: var(--secondary);
+                padding: 32px;
+                border-radius: 24px;
+                box-shadow: var(--card-shadow);
+                margin-top: 40px;
+            }
+
+            .grid-asymmetric {
+                display: grid;
+                grid-template-columns: 1.2fr 0.8fr;
+                gap: 60px;
+                align-items: center;
+            }
+
+            /* Visualizations */
+            .viz-box {
+                width: 100%;
+                height: 300px;
+                background: rgba(193, 127, 89, 0.05);
+                border-radius: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                overflow: hidden;
+            }
+
+            /* Navigation */
+            .nav-controls {
+                position: fixed;
+                bottom: 40px;
+                right: 40px;
+                display: flex;
+                gap: 16px;
+                z-index: 1000;
+            }
+
+            button {
+                background: var(--primary);
+                color: var(--background);
+                border: none;
+                padding: 18px 32px;
+                font-family: var(--font-heading);
+                font-weight: 700;
+                border-radius: 99px;
+                cursor: pointer;
+                transition:
+                    transform 0.16s var(--ease-out),
+                    background 0.3s;
+                box-shadow: 0 10px 20px rgba(193, 127, 89, 0.2);
+            }
+
+            button:hover {
+                transform: scale(1.05);
+                background: var(--foreground);
+            }
+
+            button:active {
+                transform: scale(0.97);
+            }
+
+            button.secondary {
+                background: var(--muted);
+                color: var(--foreground);
+                box-shadow: none;
+            }
+
+            /* Visualizing Decomposition: Rows */
+            .viz-row-container {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                width: 80%;
+            }
+            .viz-row {
+                height: 40px;
+                background: var(--muted);
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                padding-left: 15px;
+                font-size: 0.8rem;
+                font-weight: 700;
+                color: var(--background);
+            }
+
+            /* Visualizing Decomposition: Blocks */
+            .viz-block-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr 1fr;
+                gap: 12px;
+                width: 240px;
+                height: 240px;
+            }
+            .viz-block {
+                background: var(--primary);
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--background);
+                font-weight: 700;
+            }
+
+            /* Master-Worker Visualization */
+            .mw-container {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 50px;
+                width: 100%;
+            }
+            .mw-master {
+                width: 80px;
+                height: 60px;
+                background: var(--primary);
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-weight: bold;
+                z-index: 2;
+                position: relative;
+            }
+            .mw-workers {
+                display: flex;
+                gap: 60px;
+                z-index: 2;
+            }
+            .mw-worker {
+                width: 60px;
+                height: 60px;
+                background: var(--accent);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-weight: bold;
+                box-shadow: var(--card-shadow);
+            }
+            .mw-packet {
+                position: absolute;
+                width: 12px;
+                height: 12px;
+                background: var(--foreground);
+                border-radius: 50%;
+                z-index: 1;
+                opacity: 0;
+            }
+            .mw-packet.p1 {
+                animation: send1 2s infinite ease-out;
+            }
+            .mw-packet.p2 {
+                animation: send2 2s infinite ease-out 0.6s;
+            }
+            .mw-packet.p3 {
+                animation: send3 2s infinite ease-out 1.2s;
+            }
+
+            @keyframes send1 {
+                0% {
+                    transform: translate(0, 0);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translate(-120px, 110px);
+                    opacity: 0;
+                }
+            }
+            @keyframes send2 {
+                0% {
+                    transform: translate(0, 0);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translate(0, 110px);
+                    opacity: 0;
+                }
+            }
+            @keyframes send3 {
+                0% {
+                    transform: translate(0, 0);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translate(120px, 110px);
+                    opacity: 0;
+                }
+            }
+
+            /* Secret Sauce: Gantt Chart */
+            .gantt-container {
+                position: relative;
+                padding: 20px 0;
+                width: 100%;
+            }
+            .gantt-track {
+                height: 36px;
+                background: rgba(193, 127, 89, 0.1);
+                border-radius: 8px;
+                margin-bottom: 24px;
+                position: relative;
+            }
+            .gantt-track::before {
+                content: attr(data-label);
+                position: absolute;
+                top: -20px;
+                left: 0;
+                font-size: 0.8rem;
+                font-weight: bold;
+                color: var(--primary);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+            .gantt-block {
+                position: absolute;
+                height: 100%;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 0.8rem;
+                font-weight: bold;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            }
+            .playhead {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                width: 2px;
+                background: var(--foreground);
+                left: 0;
+                animation: scanTimeline 4s infinite linear;
+                z-index: 10;
+            }
+            .playhead::after {
+                content: "";
+                position: absolute;
+                top: -4px;
+                left: -4px;
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: var(--foreground);
+            }
+            @keyframes scanTimeline {
+                0% {
+                    left: 0%;
+                }
+                100% {
+                    left: 100%;
+                }
+            }
+
+            /* Infrastructure Local vs Cluster */
+            .infra-container {
+                display: flex;
+                width: 100%;
+                height: 100%;
+                justify-content: space-around;
+                align-items: center;
+            }
+            .infra-side {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+                width: 40%;
+            }
+            .infra-server {
+                width: 80px;
+                height: 100px;
+                background: var(--muted);
+                border-radius: 12px;
+                position: relative;
+            }
+            .infra-cluster {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .infra-node {
+                width: 35px;
+                height: 45px;
+                background: var(--primary);
+                border-radius: 6px;
+            }
+            .data-flow-container {
+                height: 60px;
+                width: 20px;
+                position: relative;
+                overflow: hidden;
+            }
+            .data-dot {
+                width: 8px;
+                height: 8px;
+                background: var(--foreground);
+                border-radius: 50%;
+                margin: 4px auto;
+                opacity: 0.5;
+            }
+            .local-flow .data-dot {
+                animation: dropSlow 2s infinite linear;
+            }
+            .cluster-flow .data-dot {
+                animation: dropFast 0.5s infinite linear;
+            }
+            @keyframes dropSlow {
+                0% {
+                    transform: translateY(-20px);
+                }
+                100% {
+                    transform: translateY(60px);
+                }
+            }
+            @keyframes dropFast {
+                0% {
+                    transform: translateY(-20px);
+                }
+                100% {
+                    transform: translateY(60px);
+                }
+            }
+
+            /* Small Files Viz */
+            .small-files-viz {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                width: 150px;
+                height: 150px;
+            }
+            .sf-block {
+                background: var(--accent);
+                border-radius: 8px;
+                animation: popIn 2s infinite var(--ease-out);
+                opacity: 0;
+            }
+            .sf-block:nth-child(1) {
+                animation-delay: 0.1s;
+            }
+            .sf-block:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+            .sf-block:nth-child(3) {
+                animation-delay: 0.3s;
+            }
+            .sf-block:nth-child(4) {
+                animation-delay: 0.4s;
+            }
+            @keyframes popIn {
+                0%,
+                10% {
+                    opacity: 0;
+                    transform: scale(0.8);
+                }
+                20%,
+                80% {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+                90%,
+                100% {
+                    opacity: 0;
+                    transform: scale(0.9);
+                }
+            }
+
+            /* Huge Files Viz */
+            .huge-files-viz {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                overflow: hidden;
+                width: 80%;
+                height: 60px;
+                padding: 10px;
+                background: rgba(193, 127, 89, 0.1);
+                border-radius: 30px;
+            }
+            .hf-dot {
+                min-width: 20px;
+                height: 20px;
+                background: var(--primary);
+                border-radius: 50%;
+                animation: streamFlow 1.5s infinite linear;
+            }
+            @keyframes streamFlow {
+                0% {
+                    transform: translateX(200px);
+                    opacity: 0;
+                }
+                20% {
+                    opacity: 1;
+                }
+                80% {
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateX(-200px);
+                    opacity: 0;
+                }
+            }
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            /* Asymmetry Helpers */
+            .offset-1 {
+                margin-left: 50px;
+            }
+            .offset-2 {
+                margin-top: -20px;
+            }
+
+            .team-list {
+                list-style: none;
+                margin-top: 32px;
+            }
+            .team-list li {
+                font-size: 1.5rem;
+                font-weight: 600;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+            }
+            .team-list li::before {
+                content: "";
+                width: 12px;
+                height: 12px;
+                background: var(--primary);
+                border-radius: 50%;
+                margin-right: 15px;
+            }
+
+            .chart-wrapper {
+                width: 100%;
+                height: 400px;
+                position: relative;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="progress-bar" id="progressBar"></div>
+
+        <div class="app-container">
+            <div class="slides-container" id="slidesContainer">
+                <!-- Step 1: Hook -->
+                <section class="slide active">
+                    <span class="label">PDC Mid-Semester Project</span>
+                    <h1>Satellite Image<br />Change Detection</h1>
+                    <p>
+                        Detecting environmental evolution through parallel pixel
+                        analysis.
+                    </p>
+                    <ul class="team-list">
+                        <li>Muhammad Luqman</li>
+                        <li>Aarish Sajid</li>
+                        <li>Muhammad Emad</li>
+                        <li>Muhammad Taimoor</li>
+                    </ul>
+                </section>
+
+                <!-- Step 2: The Objective -->
+                <section class="slide">
+                    <span class="label">The Challenge</span>
+                    <h2>Pixel-Perfect Comparison</h2>
+                    <div class="grid-asymmetric">
+                        <p>
+                            Our goal is simple yet computationally brutal: Take
+                            two temporal satellite captures of the same
+                            coordinate, calculate the Mean Squared Error (MSE),
+                            and map every change.
+                        </p>
+                        <div class="viz-box offset-2">
+                            <style>
+                                @keyframes layer-drift-1 {
+                                    0%,
+                                    100% {
+                                        transform: rotate(-15deg) scale(1);
+                                    }
+                                    50% {
+                                        transform: rotate(-10deg) scale(1.05);
+                                    }
+                                }
+                                @keyframes layer-drift-2 {
+                                    0%,
+                                    100% {
+                                        transform: translate(20px, 20px)
+                                            rotate(10deg);
+                                    }
+                                    50% {
+                                        transform: translate(-5px, -5px)
+                                            rotate(-5deg);
+                                    }
+                                }
+                            </style>
+                            <div
+                                style="
+                                    position: absolute;
+                                    width: 100px;
+                                    height: 100px;
+                                    background: var(--primary);
+                                    border-radius: 20%;
+                                    transform: rotate(-15deg);
+                                    opacity: 0.5;
+                                    animation: layer-drift-1 5s infinite
+                                        ease-in-out;
+                                "
+                            ></div>
+                            <div
+                                style="
+                                    position: absolute;
+                                    width: 100px;
+                                    height: 100px;
+                                    background: var(--accent);
+                                    border-radius: 20%;
+                                    transform: translate(20px, 20px)
+                                        rotate(10deg);
+                                    mix-blend-mode: multiply;
+                                    animation: layer-drift-2 5s infinite
+                                        ease-in-out;
+                                "
+                            ></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 3: The Bottleneck -->
+                <section class="slide">
+                    <span class="label">The Problem</span>
+                    <h2>Big Data Breaks Logic</h2>
+                    <p>
+                        When images scale to gigabytes, traditional sequential
+                        processing doesn't just slow down;
+                        <strong>it crashes.</strong> The CPU starves while
+                        waiting for the storage drive (I/O) to feed it pixels.
+                    </p>
+                    <div
+                        class="card"
+                        style="
+                            margin-top: 32px;
+                            padding: 32px;
+                            min-height: 180px;
+                            display: flex;
+                            align-items: center;
+                        "
+                    >
+                        <div
+                            style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                width: 100%;
+                            "
+                        >
+                            <div
+                                style="
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: flex-start;
+                                "
+                            >
+                                <span
+                                    class="label"
+                                    style="margin-bottom: 16px; font-size: 1rem"
+                                    >Sequential Processing Delay</span
+                                >
+                                <!-- Fixed: added overflow hidden so animation stays in box -->
+                                <div
+                                    style="
+                                        width: 400px;
+                                        height: 20px;
+                                        background: var(--muted);
+                                        border-radius: 10px;
+                                        overflow: hidden;
+                                        position: relative;
+                                    "
+                                >
+                                    <div
+                                        style="
+                                            width: 30%;
+                                            height: 100%;
+                                            background: var(--foreground);
+                                            border-radius: 10px;
+                                            position: absolute;
+                                            animation: loadBar 3s infinite
+                                                ease-in-out;
+                                        "
+                                    ></div>
+                                </div>
+                            </div>
+                            <p style="font-size: 1.1rem; text-align: right">
+                                CPU cycles wasted in long I/O wait states.
+                            </p>
+                        </div>
+                    </div>
+                    <style>
+                        @keyframes loadBar {
+                            0% {
+                                left: -30%;
+                            }
+                            100% {
+                                left: 100%;
+                            }
+                        }
+                    </style>
+                </section>
+
+                <!-- Step 4: Decomposition Concept -->
+                <section class="slide">
+                    <span class="label">Parallel Thinking</span>
+                    <h2>Breaking the Loaf</h2>
+                    <div class="grid-asymmetric">
+                        <div class="viz-box">
+                            <div
+                                style="
+                                    width: 200px;
+                                    height: 260px;
+                                    background: var(--accent);
+                                    border-radius: 12px;
+                                    position: relative;
+                                    display: flex;
+                                    flex-direction: column;
+                                    justify-content: space-evenly;
+                                    padding: 10px 0;
+                                "
+                            >
+                                <div
+                                    style="
+                                        width: 100%;
+                                        height: 2px;
+                                        background: var(--background);
+                                        opacity: 0.6;
+                                    "
+                                ></div>
+                                <div
+                                    style="
+                                        width: 100%;
+                                        height: 2px;
+                                        background: var(--background);
+                                        opacity: 0.6;
+                                    "
+                                ></div>
+                                <div
+                                    style="
+                                        width: 100%;
+                                        height: 2px;
+                                        background: var(--background);
+                                        opacity: 0.6;
+                                    "
+                                ></div>
+                            </div>
+                        </div>
+                        <p>
+                            To solve this in parallel, we must treat the image
+                            like a loaf of bread. We decompose the data into
+                            independent workloads for multiple processors.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Step 5: Row-wise Strategy -->
+                <section class="slide">
+                    <span class="label">Strategy 1</span>
+                    <h2>Row-wise Slicing</h2>
+                    <p>
+                        The simplest approach. We slice the image into
+                        horizontal strips. Each processor owns a contiguous
+                        range of scanlines.
+                    </p>
+                    <div class="card">
+                        <strong>1D Decomposition:</strong> High cache efficiency
+                        for row-major image formats, as it reads data
+                        sequentially from the disk.
+                    </div>
+                </section>
+
+                <!-- Step 6: Visualizing Row-wise -->
+                <section class="slide">
+                    <span class="label">Visualization</span>
+                    <h2>1D Distribution</h2>
+                    <div class="viz-box">
+                        <div class="viz-row-container">
+                            <div
+                                class="viz-row"
+                                style="background: var(--primary)"
+                            >
+                                P0: Rows 0-33
+                            </div>
+                            <div
+                                class="viz-row"
+                                style="background: var(--accent)"
+                            >
+                                P1: Rows 34-66
+                            </div>
+                            <div
+                                class="viz-row"
+                                style="
+                                    background: var(--muted);
+                                    color: var(--foreground);
+                                "
+                            >
+                                P2: Rows 67-99
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 7: Strategy 2: Block-wise -->
+                <section class="slide">
+                    <span class="label">Strategy 2</span>
+                    <h2>Block-wise Slicing</h2>
+                    <p>
+                        A checkerboard approach. By dividing into 2D tiles, we
+                        reduce the perimeter-to-area ratio, minimizing potential
+                        communication overhead in complex spatial algorithms.
+                    </p>
+                    <div class="card">
+                        <strong>2D Decomposition:</strong> Ideal for
+                        shared-memory grid architectures, but can cause disk
+                        thrashing on virtual or mechanical drives.
+                    </div>
+                </section>
+
+                <!-- Step 8: Visualizing Block-wise -->
+                <section class="slide">
+                    <span class="label">Visualization</span>
+                    <h2>Checkerboard Grid</h2>
+                    <div class="viz-box">
+                        <div class="viz-block-grid">
+                            <div
+                                class="viz-block"
+                                style="background: var(--primary)"
+                            >
+                                P0
+                            </div>
+                            <div
+                                class="viz-block"
+                                style="background: var(--accent)"
+                            >
+                                P1
+                            </div>
+                            <div
+                                class="viz-block"
+                                style="
+                                    background: var(--muted);
+                                    color: var(--foreground);
+                                "
+                            >
+                                P2
+                            </div>
+                            <div
+                                class="viz-block"
+                                style="background: rgba(193, 127, 89, 0.7)"
+                            >
+                                P3
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 10: Strategy 3: Pipeline -->
+                <section class="slide">
+                    <span class="label">Strategy 3</span>
+                    <h2>The Crown Jewel:<br />Dynamic Pipeline</h2>
+                    <div class="grid-asymmetric">
+                        <p>
+                            Instead of cutting the image into 4 static pieces,
+                            we cut it into 400 small "granules." We treat the
+                            computation as a continuous task queue.
+                        </p>
+                        <div class="viz-box">
+                            <div class="mw-container" style="gap: 20px">
+                                <div style="display: flex; gap: 10px">
+                                    <div
+                                        class="task-node"
+                                        style="
+                                            width: 30px;
+                                            height: 30px;
+                                            border-radius: 6px;
+                                            background: var(--primary);
+                                        "
+                                    ></div>
+                                    <div
+                                        class="task-node"
+                                        style="
+                                            width: 30px;
+                                            height: 30px;
+                                            border-radius: 6px;
+                                            background: var(--accent);
+                                        "
+                                    ></div>
+                                    <div
+                                        class="task-node"
+                                        style="
+                                            width: 30px;
+                                            height: 30px;
+                                            border-radius: 6px;
+                                            background: var(--muted);
+                                        "
+                                    ></div>
+                                </div>
+                                <span class="label" style="margin: 0"
+                                    >Task Queue</span
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 11: Master-Worker -->
+                <section class="slide">
+                    <span class="label">Logic</span>
+                    <h2>Master-Worker Pattern</h2>
+                    <div class="grid-asymmetric">
+                        <div class="card" style="margin-top: 0">
+                            <p>
+                                <strong>Master Thread:</strong> Manages the
+                                queue of all granules.
+                            </p>
+                            <p style="margin-top: 10px">
+                                <strong>Worker Threads:</strong> As soon as a
+                                processor finishes a chunk, it checks out the
+                                next task. Faster cores automatically handle
+                                more work.
+                            </p>
+                        </div>
+                        <div class="viz-box">
+                            <div class="mw-container">
+                                <div class="mw-packet p1"></div>
+                                <div class="mw-packet p2"></div>
+                                <div class="mw-packet p3"></div>
+                                <div class="mw-master">Master</div>
+                                <div class="mw-workers">
+                                    <div class="mw-worker">W1</div>
+                                    <div class="mw-worker">W2</div>
+                                    <div class="mw-worker">W3</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 12: Overlapping Workflow -->
+                <section class="slide">
+                    <span class="label">The "Secret Sauce"</span>
+                    <h2>Overlapping Logic</h2>
+                    <p>
+                        This is where Pipeline wins. We hide the latency of slow
+                        disk reads behind active computation cycles, effectively
+                        maintaining 100% CPU utilization.
+                    </p>
+                    <div class="card" style="margin-top: 25px">
+                        <div class="gantt-container">
+                            <div class="playhead"></div>
+                            <div
+                                class="gantt-track"
+                                data-label="I/O (Disk Fetching)"
+                            >
+                                <div
+                                    class="gantt-block"
+                                    style="
+                                        width: 30%;
+                                        left: 0%;
+                                        background: var(--accent);
+                                    "
+                                >
+                                    Fetch 1
+                                </div>
+                                <div
+                                    class="gantt-block"
+                                    style="
+                                        width: 30%;
+                                        left: 33%;
+                                        background: var(--accent);
+                                    "
+                                >
+                                    Fetch 2
+                                </div>
+                                <div
+                                    class="gantt-block"
+                                    style="
+                                        width: 30%;
+                                        left: 66%;
+                                        background: var(--accent);
+                                    "
+                                >
+                                    Fetch 3
+                                </div>
+                            </div>
+                            <div
+                                class="gantt-track"
+                                data-label="CPU (Processing)"
+                            >
+                                <div
+                                    class="gantt-block"
+                                    style="
+                                        width: 30%;
+                                        left: 33%;
+                                        background: var(--primary);
+                                    "
+                                >
+                                    Calc 1
+                                </div>
+                                <div
+                                    class="gantt-block"
+                                    style="
+                                        width: 30%;
+                                        left: 66%;
+                                        background: var(--primary);
+                                    "
+                                >
+                                    Calc 2
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 13: Prefetching -->
+                <section class="slide">
+                    <span class="label">Mechanism</span>
+                    <h2>Prefetching</h2>
+                    <div class="grid-asymmetric">
+                        <p>
+                            While Processor A is crunching the numbers for Block
+                            10, a background thread is already loading Block 11
+                            into RAM. The application is no longer bound by disk
+                            speeds.
+                        </p>
+                        <div class="viz-box offset-2">
+                            <div
+                                style="
+                                    width: 80px;
+                                    height: 80px;
+                                    border: 6px solid var(--muted);
+                                    border-radius: 50%;
+                                    border-top-color: var(--primary);
+                                    animation: spin 1s infinite
+                                        cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                                "
+                            ></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 14: Scaling -->
+                <section class="slide">
+                    <span class="label">Infrastructure</span>
+                    <h2>Local vs Cluster</h2>
+                    <div class="grid-asymmetric">
+                        <p>
+                            On a local machine, threads fight for a single disk.
+                            On an HPC cluster, the Dynamic Pipeline scales
+                            beautifully as <strong>N</strong> processors request
+                            tasks simultaneously over high-speed networks.
+                        </p>
+                        <div class="viz-box offset-2">
+                            <div class="infra-container">
+                                <div class="infra-side">
+                                    <span
+                                        class="label"
+                                        style="
+                                            font-size: 0.7rem;
+                                            text-align: center;
+                                        "
+                                        >Local</span
+                                    >
+                                    <div class="infra-server"></div>
+                                    <div class="data-flow-container local-flow">
+                                        <div class="data-dot"></div>
+                                    </div>
+                                </div>
+                                <div
+                                    style="
+                                        width: 2px;
+                                        height: 60%;
+                                        background: var(--muted);
+                                        opacity: 0.3;
+                                    "
+                                ></div>
+                                <div class="infra-side">
+                                    <span
+                                        class="label"
+                                        style="
+                                            font-size: 0.7rem;
+                                            text-align: center;
+                                        "
+                                        >Cluster</span
+                                    >
+                                    <div class="infra-cluster">
+                                        <div class="infra-node"></div>
+                                        <div class="infra-node"></div>
+                                        <div class="infra-node"></div>
+                                        <div class="infra-node"></div>
+                                    </div>
+                                    <div
+                                        class="data-flow-container cluster-flow"
+                                        style="display: flex; gap: 10px"
+                                    >
+                                        <div>
+                                            <div
+                                                class="data-dot"
+                                                style="animation-delay: 0s"
+                                            ></div>
+                                        </div>
+                                        <div>
+                                            <div
+                                                class="data-dot"
+                                                style="animation-delay: 0.2s"
+                                            ></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 15: The Experiment -->
+                <section class="slide">
+                    <span class="label">Benchmark</span>
+                    <h2>Normal vs Huge Datasets</h2>
+                    <div class="card">
+                        <p>
+                            <strong>Normal:</strong> 20-30 MB Image Files.
+                            Easily fits entirely in memory.
+                        </p>
+                        <p style="margin-top: 20px">
+                            <strong>Huge:</strong> 7-8 GB Image Files. Heavy I/O
+                            Bottlenecks that force disk thrashing.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Step 16: Small Files Analysis -->
+                <section class="slide">
+                    <span class="label">Result 1</span>
+                    <h2>Small Files: Grid Dominance</h2>
+                    <div class="grid-asymmetric">
+                        <p>
+                            Small files fit into cache. Because tasks are short,
+                            the "overhead" of the Pipeline (Master talking to
+                            Workers) is slower than just letting processors grab
+                            a static grid chunk instantly.
+                        </p>
+                        <div class="viz-box offset-2">
+                            <div class="small-files-viz">
+                                <div class="sf-block"></div>
+                                <div class="sf-block"></div>
+                                <div class="sf-block"></div>
+                                <div class="sf-block"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 17: Huge Files Analysis -->
+                <section class="slide">
+                    <span class="label">Result 2</span>
+                    <h2>Huge Files: Pipeline King</h2>
+                    <div class="grid-asymmetric">
+                        <p>
+                            Storage drives are sluggish. Reading gigabytes
+                            creates massive traffic jams. Scheme 3 chewed
+                            through the "Huge" dataset in just 4.86s on 8 cores
+                            by hiding read latency via overlapping.
+                        </p>
+                        <div class="viz-box">
+                            <div class="huge-files-viz">
+                                <div class="hf-dot"></div>
+                                <div
+                                    class="hf-dot"
+                                    style="animation-delay: 0.3s"
+                                ></div>
+                                <div
+                                    class="hf-dot"
+                                    style="animation-delay: 0.6s"
+                                ></div>
+                                <div
+                                    class="hf-dot"
+                                    style="animation-delay: 0.9s"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 18: Viz Results Normal -->
+                <section class="slide">
+                    <span class="label">Data Viz</span>
+                    <h2>Normal Dataset (Seconds)</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="normalChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- Step 19: Viz Results Huge -->
+                <section class="slide">
+                    <span class="label">Data Viz</span>
+                    <h2>Huge Dataset (Seconds)</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="hugeChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- Step 20: Final Verdict -->
+                <section class="slide">
+                    <span class="label">Conclusion</span>
+                    <h2>Final Verdict</h2>
+                    <div class="card">
+                        <p>
+                            Parallelization isn't just about throwing more cores
+                            at a problem. Adding more cores does not magically
+                            solve problems. It's about
+                            <strong>orchestration & optimization</strong>. It's
+                            not just how many cores do you have? It's also about
+                            <strong>how you use them effectively</strong>.
+                        </p>
+                    </div>
+                </section>
+            </div>
+
+            <div class="nav-controls">
+                <button class="secondary" id="prevBtn">Back</button>
+                <button id="nextBtn">Continue</button>
+            </div>
+        </div>
+
+        <script>
+            const slides = document.querySelectorAll(".slide");
+            const nextBtn = document.getElementById("nextBtn");
+            const prevBtn = document.getElementById("prevBtn");
+            const progressBar = document.getElementById("progressBar");
+            let currentSlide = 0;
+
+            function updateSlides() {
+                slides.forEach((slide, index) => {
+                    slide.classList.remove("active");
+                    if (index === currentSlide) slide.classList.add("active");
+                });
+
+                const progress = ((currentSlide + 1) / slides.length) * 100;
+                progressBar.style.width = `${progress}%`;
+
+                prevBtn.style.visibility =
+                    currentSlide === 0 ? "hidden" : "visible";
+
+                if (currentSlide === slides.length - 1) {
+                    nextBtn.innerText = "Restart";
+                } else {
+                    nextBtn.innerText = "Continue";
+                }
+
+                // Init charts if on that slide
+                if (slides[currentSlide].querySelector("#normalChart"))
+                    initNormalChart();
+                if (slides[currentSlide].querySelector("#hugeChart"))
+                    initHugeChart();
+            }
+
+            nextBtn.addEventListener("click", () => {
+                if (currentSlide < slides.length - 1) {
+                    currentSlide++;
+                } else {
+                    currentSlide = 0;
+                }
+                updateSlides();
+            });
+
+            prevBtn.addEventListener("click", () => {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updateSlides();
+                }
+            });
+
+            // Keyboard Navigation
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "ArrowRight" || e.key === "Space") {
+                    nextBtn.click();
+                }
+                if (e.key === "ArrowLeft") {
+                    prevBtn.click();
+                }
+            });
+
+            // Charts
+            let normalChartInstance = null;
+            let hugeChartInstance = null;
+
+            Chart.defaults.font.family = "'DM Sans', sans-serif";
+            Chart.defaults.color = "#3D2C2C";
+
+            function initNormalChart() {
+                if (normalChartInstance) return;
+                const ctx = document
+                    .getElementById("normalChart")
+                    .getContext("2d");
+                normalChartInstance = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: [
+                            "2 Cores",
+                            "4 Cores",
+                            "8 Cores",
+                            "12 Cores",
+                            "16 Cores",
+                        ],
+                        datasets: [
+                            {
+                                label: "Row-Static",
+                                data: [0.649, 0.42, 0.31, 0.284, 0.318],
+                                backgroundColor: "#C17F59",
+                                borderRadius: 4,
+                            },
+                            {
+                                label: "Block-Static",
+                                data: [0.548, 0.352, 0.237, 0.219, 0.279],
+                                backgroundColor: "#3D2C2C",
+                                borderRadius: 4,
+                            },
+                            {
+                                label: "Pipeline-Dynamic",
+                                data: [1.139, 0.613, 0.554, 0.557, 0.684],
+                                backgroundColor: "#D4C4B0",
+                                borderRadius: 4,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { font: { size: 14, weight: "600" } },
+                            },
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: "rgba(92, 63, 48, 0.05)" },
+                                title: {
+                                    display: true,
+                                    text: "Time (Seconds)",
+                                },
+                            },
+                            x: { grid: { display: false } },
+                        },
+                        animation: { duration: 1500, easing: "easeOutQuart" },
+                    },
+                });
+            }
+
+            function initHugeChart() {
+                if (hugeChartInstance) return;
+                const ctx = document
+                    .getElementById("hugeChart")
+                    .getContext("2d");
+                hugeChartInstance = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: [
+                            "2 Cores",
+                            "4 Cores",
+                            "8 Cores",
+                            "12 Cores",
+                            "16 Cores",
+                        ],
+                        datasets: [
+                            {
+                                label: "Row-Static",
+                                data: [9.1, 5.7, 5.4, 5.6, 6.3],
+                                backgroundColor: "#C17F59",
+                                borderRadius: 4,
+                            },
+                            {
+                                label: "Block-Static",
+                                data: [20.8, 13.9, 27.3, 18.1, 14.9],
+                                backgroundColor: "#3D2C2C",
+                                borderRadius: 4,
+                            },
+                            {
+                                label: "Pipeline-Dynamic",
+                                data: [14.2, 5.6, 4.8, 5.4, 6.0],
+                                backgroundColor: "#D4C4B0",
+                                borderRadius: 4,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { font: { size: 14, weight: "600" } },
+                            },
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: "rgba(92, 63, 48, 0.05)" },
+                                title: {
+                                    display: true,
+                                    text: "Time (Seconds)",
+                                },
+                            },
+                            x: { grid: { display: false } },
+                        },
+                        animation: { duration: 1500, easing: "easeOutQuart" },
+                    },
+                });
+            }
+
+            updateSlides();
+        </script>
+    </body>
+</html>
