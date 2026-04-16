@@ -1245,19 +1245,529 @@
                     </div>
                 </section>
 
-                <!-- Step 20: Final Verdict -->
+                <!-- NEW SLIDE 18: GPU vs CPU Architecture -->
                 <section class="slide">
-                    <span class="label">Conclusion</span>
-                    <h2>Final Verdict</h2>
-                    <div class="card">
+                    <span class="label">Hardware Evolution</span>
+                    <h2>The Swarm: GPU vs CPU</h2>
+                    <div class="grid-asymmetric">
+                        <div class="viz-box">
+                            <style>
+                                .swarm-container {
+                                    display: grid;
+                                    grid-template-columns: repeat(10, 1fr);
+                                    gap: 4px;
+                                    width: 150px;
+                                }
+                                .swarm-dot {
+                                    width: 8px;
+                                    height: 8px;
+                                    background: var(--primary);
+                                    border-radius: 20%;
+                                    animation: pulse-swarm 1.5s infinite
+                                        ease-in-out;
+                                }
+                                .big-brain {
+                                    width: 40px;
+                                    height: 40px;
+                                    background: var(--foreground);
+                                    border-radius: 8px;
+                                    margin-bottom: 10px;
+                                }
+                                @keyframes pulse-swarm {
+                                    0%,
+                                    100% {
+                                        opacity: 0.3;
+                                        transform: scale(0.8);
+                                    }
+                                    50% {
+                                        opacity: 1;
+                                        transform: scale(1.1);
+                                    }
+                                }
+                            </style>
+                            <div
+                                style="
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 40px;
+                                "
+                            >
+                                <div style="text-align: center">
+                                    <div class="big-brain"></div>
+                                    <span
+                                        class="label"
+                                        style="font-size: 0.6rem"
+                                        >CPU Core<br />(Big Brain)</span
+                                    >
+                                </div>
+                                <div
+                                    style="
+                                        font-size: 2rem;
+                                        font-weight: bold;
+                                        color: var(--muted);
+                                    "
+                                >
+                                    vs
+                                </div>
+                                <div style="text-align: center">
+                                    <div class="swarm-container">
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                        <div class="swarm-dot"></div>
+                                    </div>
+                                    <span
+                                        class="label"
+                                        style="
+                                            font-size: 0.6rem;
+                                            margin-top: 10px;
+                                        "
+                                        >GPU Cores<br />(The Swarm)</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
                         <p>
-                            Parallelization isn't just about throwing more cores
-                            at a problem. Adding more cores does not magically
-                            solve problems. It's about
-                            <strong>orchestration & optimization</strong>. It's
-                            not just how many cores do you have? It's also about
-                            <strong>how you use them effectively</strong>.
+                            A CPU is a genius that can do anything, one task at
+                            a time. A GPU is an army of "simpletons." For
+                            satellite imagery, we don't need genius; we need
+                            <strong>throughput</strong>. The GPU handles
+                            thousands of pixels simultaneously where the CPU
+                            handles dozens.
                         </p>
+                    </div>
+                </section>
+
+                <!-- NEW SLIDE 19: Scaling to the Impossible -->
+                <section class="slide">
+                    <span class="label">Performance Gap</span>
+                    <h2>Scaling to the Impossible</h2>
+                    <div class="grid-asymmetric">
+                        <p>
+                            Our MPI CPU code was fast for small files, but any
+                            <strong>big dataset</strong> would take minutes or
+                            hours on a standard CPU. The RTX 4060 GPU, using
+                            Tiled CVA, processed these 8.5 billion pixels in
+                            <strong>~90 seconds</strong> on a laptop.
+                        </p>
+                        <div class="card" style="margin-top: 0">
+                            <div
+                                style="
+                                    display: flex;
+                                    flex-direction: column;
+                                    gap: 15px;
+                                "
+                            >
+                                <div>
+                                    <span
+                                        class="label"
+                                        style="font-size: 0.7rem"
+                                        >CPU (8 Ranks) Estimated</span
+                                    >
+                                    <div
+                                        style="
+                                            width: 100%;
+                                            height: 12px;
+                                            background: var(--muted);
+                                            border-radius: 6px;
+                                        "
+                                    >
+                                        <div
+                                            style="
+                                                width: 100%;
+                                                height: 100%;
+                                                background: var(--foreground);
+                                                border-radius: 6px;
+                                            "
+                                        ></div>
+                                    </div>
+                                    <span
+                                        style="
+                                            font-size: 0.8rem;
+                                            font-weight: bold;
+                                        "
+                                        >600+ Seconds</span
+                                    >
+                                </div>
+                                <div>
+                                    <span
+                                        class="label"
+                                        style="
+                                            font-size: 0.7rem;
+                                            color: var(--primary);
+                                        "
+                                        >GPU (CVA Tiled) Actual</span
+                                    >
+                                    <div
+                                        style="
+                                            width: 100%;
+                                            height: 12px;
+                                            background: var(--muted);
+                                            border-radius: 6px;
+                                        "
+                                    >
+                                        <div
+                                            style="
+                                                width: 15%;
+                                                height: 100%;
+                                                background: var(--primary);
+                                                border-radius: 6px;
+                                            "
+                                        ></div>
+                                    </div>
+                                    <span
+                                        style="
+                                            font-size: 0.8rem;
+                                            font-weight: bold;
+                                            color: var(--primary);
+                                        "
+                                        >90.8 Seconds</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- NEW SLIDE 20: Simple Math vs Deep Learning -->
+                <section class="slide">
+                    <span class="label">Algorithm Strategy</span>
+                    <h2>Deep Learning?</h2>
+                    <div class="grid-asymmetric">
+                        <div class="viz-box">
+                            <style>
+                                .math-vector {
+                                    width: 60px;
+                                    height: 2px;
+                                    background: var(--primary);
+                                    position: relative;
+                                }
+                                .math-vector::after {
+                                    content: "";
+                                    position: absolute;
+                                    right: 0;
+                                    top: -4px;
+                                    width: 10px;
+                                    height: 10px;
+                                    border-top: 2px solid var(--primary);
+                                    border-right: 2px solid var(--primary);
+                                    transform: rotate(45deg);
+                                }
+                                .ai-box {
+                                    width: 60px;
+                                    height: 60px;
+                                    background: var(--foreground);
+                                    border-radius: 8px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    color: var(--background);
+                                    font-size: 2rem;
+                                    font-weight: bold;
+                                    animation: ai-pulse 2s infinite alternate
+                                        ease-in-out;
+                                }
+                                @keyframes ai-pulse {
+                                    from {
+                                        transform: scale(0.95);
+                                    }
+                                    to {
+                                        transform: scale(1.05);
+                                    }
+                                }
+                            </style>
+                            <div
+                                style="
+                                    display: flex;
+                                    align-items: flex-end;
+                                    justify-content: center;
+                                    gap: 60px;
+                                "
+                            >
+                                <div
+                                    style="
+                                        text-align: center;
+                                        display: flex;
+                                        flex-direction: column;
+                                        align-items: center;
+                                        height: 120px;
+                                    "
+                                >
+                                    <div
+                                        style="
+                                            flex-grow: 1;
+                                            display: flex;
+                                            align-items: center;
+                                        "
+                                    >
+                                        <div class="math-vector"></div>
+                                    </div>
+                                    <span
+                                        class="label"
+                                        style="font-size: 0.6rem; margin: 0"
+                                        >CVA (Vector Math)<br />Fast &
+                                        Predictable</span
+                                    >
+                                </div>
+                                <div
+                                    style="
+                                        text-align: center;
+                                        display: flex;
+                                        flex-direction: column;
+                                        align-items: center;
+                                        height: 120px;
+                                    "
+                                >
+                                    <div
+                                        style="
+                                            flex-grow: 1;
+                                            display: flex;
+                                            align-items: center;
+                                        "
+                                    >
+                                        <div class="ai-box">?</div>
+                                    </div>
+                                    <span
+                                        class="label"
+                                        style="font-size: 0.6rem; margin: 0"
+                                        >Deep Learning<br />Heavy & "Black
+                                        Box"</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                        <p>
+                            Why not use AI? Deep Learning is powerful but slow
+                            and requires training.
+                            <strong>Change Vector Analysis (CVA)</strong> is
+                            deterministic. It is "Lightweight Math" that runs at
+                            the speed of the hardware.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Takeaway 1: Orchestration -->
+                <section class="slide">
+                    <span class="label">Takeaway 01</span>
+                    <h2>Orchestration Over Raw Power</h2>
+                    <div class="grid-asymmetric">
+                        <div class="viz-box">
+                            <div class="mw-container">
+                                <div
+                                    class="mw-packet p1"
+                                    style="animation-duration: 1s"
+                                ></div>
+                                <div
+                                    class="mw-packet p2"
+                                    style="animation-duration: 1s"
+                                ></div>
+                                <div
+                                    class="mw-packet p3"
+                                    style="animation-duration: 1s"
+                                ></div>
+                                <div
+                                    class="mw-master"
+                                    style="background: var(--foreground)"
+                                >
+                                    Logic
+                                </div>
+                                <div class="mw-workers">
+                                    <div class="mw-worker"></div>
+                                    <div class="mw-worker"></div>
+                                    <div class="mw-worker"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <p>
+                            Parallelism is not just about counting cores. As
+                            seen in our MPI implementation,
+                            <strong>how you decompose data</strong> dictates
+                            success. Reducing communication overhead and
+                            managing downstream flow is the difference between a
+                            system that scales and one that chokes.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Takeaway 2: Resource Mapping -->
+                <section class="slide">
+                    <span class="label">Takeaway 02</span>
+                    <h2>The Art of Fitting In</h2>
+                    <div class="grid-asymmetric">
+                        <p>
+                            An engineer's greatest skill is
+                            <strong
+                                >fitting the problem to the resource.</strong
+                            >
+                            We did not let the 8GB limit of our hardware stop us
+                            from processing 24GB of data flow. Through Tiling
+                            and Streaming, we made the impossible fit into
+                            available RAM and VRAM.
+                        </p>
+                        <div
+                            class="card"
+                            style="
+                                display: flex;
+                                gap: 10px;
+                                align-items: flex-end;
+                                height: 150px;
+                            "
+                        >
+                            <div
+                                style="
+                                    width: 30%;
+                                    height: 100%;
+                                    background: var(--primary);
+                                    border-radius: 8px 8px 0 0;
+                                "
+                            ></div>
+                            <div
+                                style="
+                                    width: 30%;
+                                    height: 60%;
+                                    background: var(--accent);
+                                    border-radius: 8px 8px 0 0;
+                                "
+                            ></div>
+                            <div
+                                style="
+                                    width: 30%;
+                                    height: 30%;
+                                    background: var(--muted);
+                                    border-radius: 8px 8px 0 0;
+                                "
+                            ></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Takeaway 3: GPU vs Physics -->
+                <section class="slide">
+                    <span class="label">Takeaway 03</span>
+                    <h2>Physics Always Wins</h2>
+                    <div class="grid-asymmetric">
+                        <div class="viz-box">
+                            <div style="position: relative">
+                                <div
+                                    style="
+                                        width: 120px;
+                                        height: 120px;
+                                        border: 4px dashed var(--muted);
+                                        border-radius: 50%;
+                                        animation: spin 10s linear infinite;
+                                    "
+                                ></div>
+                                <div
+                                    style="
+                                        position: absolute;
+                                        top: 50%;
+                                        left: 50%;
+                                        transform: translate(-50%, -50%);
+                                        color: var(--primary);
+                                        font-size: 3rem;
+                                        font-weight: 800;
+                                    "
+                                >
+                                    GPU
+                                </div>
+                            </div>
+                        </div>
+                        <p>
+                            You cannot beat physics with clever software alone.
+                            Specialized hardware like GPUs will
+                            <strong>always</strong> outperform general-purpose
+                            CPUs for data-heavy tasks. By offloading "dumb math"
+                            to thousands of tiny cores, we achieved 10x speedups
+                            that no CPU optimization could touch.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Takeaway 4: The End -->
+                <section class="slide last-slide">
+                    <style>
+                        .last-slide.active {
+                            display: flex !important;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            text-align: center;
+                            min-height: 80vh;
+                        }
+                        body:has(.last-slide.active) .nav-controls {
+                            display: none !important;
+                        }
+                    </style>
+                    <span class="label">Project Complete</span>
+                    <h1 style="margin-top: 20px">Thank<br />You.</h1>
+                    <div
+                        style="
+                            margin-top: 50px;
+                            display: flex;
+                            gap: 15px;
+                            justify-content: center;
+                        "
+                    >
+                        <style>
+                            .cute-block {
+                                width: 25px;
+                                height: 25px;
+                                border-radius: 6px;
+                                animation: cute-bounce 0.5s infinite alternate
+                                    cubic-bezier(0.2, 0.8, 0.2, 1);
+                                transform-origin: bottom;
+                            }
+                            @keyframes cute-bounce {
+                                0% {
+                                    transform: translateY(0) scale(1.3, 0.7);
+                                }
+                                20% {
+                                    transform: translateY(0) scale(1, 1);
+                                }
+                                100% {
+                                    transform: translateY(-25px) scale(0.9, 1.1);
+                                }
+                            }
+                        </style>
+                        <div
+                            class="cute-block"
+                            style="
+                                background: var(--primary);
+                                animation-delay: 0s;
+                            "
+                        ></div>
+                        <div
+                            class="cute-block"
+                            style="
+                                background: var(--accent);
+                                animation-delay: 0.1s;
+                            "
+                        ></div>
+                        <div
+                            class="cute-block"
+                            style="
+                                background: var(--muted);
+                                animation-delay: 0.2s;
+                            "
+                        ></div>
+                        <div
+                            class="cute-block"
+                            style="
+                                background: var(--foreground);
+                                animation-delay: 0.3s;
+                            "
+                        ></div>
                     </div>
                 </section>
             </div>
